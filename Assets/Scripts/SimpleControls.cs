@@ -14,6 +14,8 @@ public class SimpleControls : MonoBehaviour
     private bool _isJump;
     private bool _isGrounded;
 
+    private Vector2 _prevMoveVec;
+
     [SerializeField] private float gravity = 2f;
     [SerializeField] private float moveSpd = 0.3f;
     [SerializeField] private float jumpStrength = 1f;
@@ -59,15 +61,34 @@ public class SimpleControls : MonoBehaviour
 
     public void OnMove(InputValue input)
     {
-        var facing = Camera.main.transform.eulerAngles.y;
         Vector2 inputVec = input.Get<Vector2>();
+        _prevMoveVec = inputVec;
+        Move(inputVec);
+    }
 
-        var turnedVec = Quaternion.Euler(0, facing, 0) * inputVec;
-        
-        var temp = new Vector3(turnedVec.x, 0, turnedVec.y) * moveSpd;
+    //Set a new move vector based on the passed in vector2
+    private void Move(Vector2 inputVec)
+    {
+        var turnedVec = AdjustFacing(inputVec);
+
+        Vector3 temp = new Vector3(turnedVec.x, 0, turnedVec.y) * moveSpd;
 
         _moveVec.x = temp.x;
         _moveVec.z = temp.z;
+    }
+
+    //Rotates the input based on the direction the player is facing.
+    private Vector3 AdjustFacing(Vector2 inputVec)
+    {
+        var facing = Camera.main.transform.eulerAngles.y;
+
+        var turnedVec = Quaternion.Euler(0, 0, -facing) * inputVec;
+        return turnedVec;
+    }
+
+    public void OnRotateCamera(InputValue value)
+    {
+        Move(_prevMoveVec);
     }
 
     public void OnJump(InputValue input)
