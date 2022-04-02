@@ -5,7 +5,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class SimpleControls : MonoBehaviour
+public class PlayerControls : MonoBehaviour
 {
     private CharacterController _cc;
     private Animator _anim;
@@ -13,12 +13,15 @@ public class SimpleControls : MonoBehaviour
     private Vector3 _moveVec;
     private bool _isJump;
     private bool _isGrounded;
+    private bool _isKB;
 
     private Vector2 _prevMoveVec;
 
     [SerializeField] private float gravity = 2f;
     [SerializeField] private float moveSpd = 0.3f;
     [SerializeField] private float jumpStrength = 1f;
+    [SerializeField] private float kbTime;
+    [SerializeField] private float kbForce;
     
     
     private static readonly int Jump = Animator.StringToHash("OnJump");
@@ -28,6 +31,7 @@ public class SimpleControls : MonoBehaviour
     void Start()
     {
         _cc = GetComponent<CharacterController>();
+        _cc.detectCollisions = true;
         _anim = GetComponent<Animator>();
     }
 
@@ -47,18 +51,21 @@ public class SimpleControls : MonoBehaviour
                 _moveVec.y = 0;
             }
         }
-        
-        _moveVec.y -= gravity * Time.deltaTime;
-        _cc.Move(_moveVec);
-        
-        var forward = new Vector3(_moveVec.x, 0, _moveVec.z);
-        if(forward.magnitude != 0)
+
+        if (!_isKB)
         {
-            transform.rotation = Quaternion.LookRotation(forward);
+            _moveVec.y -= gravity * Time.deltaTime;
+            _cc.Move(_moveVec);
+        
+            var forward = new Vector3(_moveVec.x, 0, _moveVec.z);
+            if(forward.magnitude != 0)
+            {
+                transform.rotation = Quaternion.LookRotation(forward);
+            }
         }
     }
     
-
+    //When a move input is pressed, set the horizontal direction and speed of movement.
     public void OnMove(InputValue input)
     {
         Vector2 inputVec = input.Get<Vector2>();
@@ -86,11 +93,13 @@ public class SimpleControls : MonoBehaviour
         return turnedVec;
     }
 
+    // Run move again when the camera changes with old move vector. This is so the player can move in a direction based on the camera.
     public void OnRotateCamera(InputValue value)
     {
         Move(_prevMoveVec);
     }
 
+    // On the jump input, if the player is grounded, then jump.
     public void OnJump(InputValue input)
     {
         if (_cc.isGrounded)
@@ -99,5 +108,38 @@ public class SimpleControls : MonoBehaviour
             _isJump = true;
             _anim.SetTrigger(Jump);
         }
+    }
+
+    // Runs when characters enters a collision while moving.
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.gameObject.CompareTag("Enemy"))
+        {
+            _isKB = true;
+            Hit(hit.transform);
+            hit.gameObject.GetComponent<EnemyMove>().Hit(transform);
+        }
+    }
+    
+    // Runs when hitting an enemy. Triggers a knockback effect.
+    public void Hit(Transform other)
+    {
+        var knockback = (transform.position - other.position).normalized * kbForce;
+        StopAllCoroutines();
+        StartCoroutine(Knockback(knockback));
+    }
+    
+    // Couroutine for the knockback.
+    private IEnumerator Knockback(Vector3 knockback)
+    {
+        float timer = 0;
+        while (timer < kbTime)
+        {
+            _cc.Move(knockback);
+            timer += Time.deltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        _isKB = false;
     }
 }

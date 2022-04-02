@@ -24,21 +24,21 @@ public class CameraController : MonoBehaviour
         get;
     }
     
-    // Start is called before the first frame update
+    // Get the initial position of the camera relative to the target and uses that as the default posiiton and rotation.
     void Start()
     {
         _cameraBoom = transform.position - targetGameObject.transform.position;
         _cameraBoomRotation = transform.rotation;
-        var simpleControls = targetGameObject.GetComponent<SimpleControls>();
     }
 
-    // Update is called once per frame
+    // Adjusts the camera position based on the player's position and the rotation input.
     void LateUpdate()
     {
         transform.position = targetGameObject.transform.position + _cameraRotation * _cameraBoom;
         transform.rotation = _cameraRotation * _cameraBoomRotation;
     }
 
+    // Takes in a vector2 input and converts it into a Quaternion for the camera to rotate on.
     public void OnRotateCamera(InputValue input)
     {
         var vec = input.Get<Vector2>();
