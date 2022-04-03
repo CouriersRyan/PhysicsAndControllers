@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerControls : MonoBehaviour
 {
@@ -15,6 +16,8 @@ public class PlayerControls : MonoBehaviour
     private bool _isGrounded;
     private bool _isKB;
 
+    private int _jumpBuffer;
+
     private Vector2 _prevMoveVec;
 
     [SerializeField] private float gravity = 2f;
@@ -24,7 +27,7 @@ public class PlayerControls : MonoBehaviour
     [SerializeField] private float kbForce;
     
     
-    private static readonly int Jump = Animator.StringToHash("OnJump");
+    private static readonly int JumpTrigger = Animator.StringToHash("OnJump");
     private static readonly int Grounded = Animator.StringToHash("IsGrounded");
     private static readonly int Velocity = Animator.StringToHash("Velocity");
 
@@ -52,6 +55,13 @@ public class PlayerControls : MonoBehaviour
             }
         }
 
+        // Tries to run jump if there is a buffer
+        if (_jumpBuffer > 0)
+        {
+            Jump();
+            _jumpBuffer--;
+        }
+
         if (!_isKB)
         {
             _moveVec.y -= gravity * Time.deltaTime;
@@ -63,6 +73,8 @@ public class PlayerControls : MonoBehaviour
                 transform.rotation = Quaternion.LookRotation(forward);
             }
         }
+        
+        CheckDeath();
     }
     
     //When a move input is pressed, set the horizontal direction and speed of movement.
@@ -99,14 +111,34 @@ public class PlayerControls : MonoBehaviour
         Move(_prevMoveVec);
     }
 
-    // On the jump input, if the player is grounded, then jump.
+    // On the jump input, run the jump method, if it can't be fulfilled then set a buffer instead.
     public void OnJump(InputValue input)
+    {
+        if (!Jump())
+        {
+            _jumpBuffer = 3;
+        }
+    }
+
+    private bool Jump()
     {
         if (_cc.isGrounded)
         {
             _moveVec.y = jumpStrength;
             _isJump = true;
-            _anim.SetTrigger(Jump);
+            _anim.SetTrigger(JumpTrigger);
+            return true;
+        }
+
+        return false;
+    }
+
+    // Restarts the game if the player falls past a certain velocity.
+    public void CheckDeath()
+    {
+        if (transform.position.y < -100)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
 
