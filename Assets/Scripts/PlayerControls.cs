@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
+// Component that handles player movement.
 public class PlayerControls : MonoBehaviour
 {
     private CharacterController _cc;
@@ -42,7 +43,7 @@ public class PlayerControls : MonoBehaviour
     {
         _isGrounded = _cc.isGrounded;
         _anim.SetBool(Grounded, _isGrounded);
-
+        
         if (!_isGrounded)
         {
             if (_moveVec.y < 0) _isJump = false;
@@ -51,6 +52,7 @@ public class PlayerControls : MonoBehaviour
             _anim.SetFloat(Velocity, _moveVec.magnitude);
             if (!_isJump)
             {
+                // While grounded, prevent y movement from increasing too much.
                 _moveVec.y = 0;
             }
         }
@@ -61,7 +63,8 @@ public class PlayerControls : MonoBehaviour
             Jump();
             _jumpBuffer--;
         }
-
+        
+        // Run normal movement as long as knockback is not applying.
         if (!_isKB)
         {
             _moveVec.y -= gravity * Time.deltaTime;
@@ -120,6 +123,7 @@ public class PlayerControls : MonoBehaviour
         }
     }
 
+    // if the character is grounded, have the player jump.
     private bool Jump()
     {
         if (_cc.isGrounded)

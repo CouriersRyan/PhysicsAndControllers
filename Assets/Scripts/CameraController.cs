@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// Class that moves the camera to follow a target and rotate based on player input.
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private GameObject targetGameObject;
 
+    // The offset of the camera's original position and rotation.
     private Vector3 _cameraBoom;
     private Quaternion _cameraBoomRotation;
+    
+    // The total player input difference from the original camera offset position.
     private float _rotateX;
     private float _rotateY;
-    [SerializeField] private float sensitivity;
-
+    
+    [SerializeField] private float sensitivity; // Mouse to camera rotation sensitivity.
+    
+    // Limits the rotation of the camera up and down by an minimum and maximum.
     [SerializeField] private float clampYTop = 15f;
     [SerializeField] private float clampYBot = -15f;
 

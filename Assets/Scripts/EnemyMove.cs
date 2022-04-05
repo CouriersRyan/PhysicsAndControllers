@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
+// Component responsible for enemy behavior and movement.
 public class EnemyMove : MonoBehaviour
 {
     [SerializeField] private float searchRadius;
@@ -15,14 +16,14 @@ public class EnemyMove : MonoBehaviour
     private CharacterController _cc;
     private Animator _anim;
     
-    // Start is called before the first frame update
+    
     void Start()
     {
         _cc = GetComponent<CharacterController>();
         _anim = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
+    // Keep searching for the player in radius until they are found.
     void FixedUpdate()
     {
         if (_player == null)
